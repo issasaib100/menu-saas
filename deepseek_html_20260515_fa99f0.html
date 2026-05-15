@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=yes">
+    <title>منيو سفرة | مطعم وكافيه - منيو إلكتروني تفاعلي</title>
+    <!-- Tailwind CSS + Font Awesome + Google Fonts -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@300;400;500;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family: 'Tajawal', sans-serif;
+        }
+        body {
+            transition: background-color 0.3s, color 0.2s;
+        }
+        body.dark {
+            background-color: #0f172a;
+            color: #f1f5f9;
+        }
+        body.dark .card-bg {
+            background-color: #1e293b;
+            border-color: #334155;
+        }
+        body.dark .menu-item {
+            background: #1e293b;
+            border: 1px solid #334155;
+        }
+        body.dark .input-dark {
+            background-color: #334155;
+            border-color: #475569;
+            color: white;
+        }
+        .card-bg {
+            background: white;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .card-bg:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -12px rgba(0,0,0,0.15);
+        }
+        .menu-item {
+            transition: all 0.2s;
+        }
+        /* زر السلة الثابت (أسفل الشاشة) */
+        .cart-fab {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            z-index: 45;
+            background: #f59e0b;
+            box-shadow: 0 10px 25px -5px rgba(245, 158, 11, 0.4);
+            transition: all 0.2s ease;
+        }
+        .cart-fab:hover {
+            transform: scale(1.05);
+            background: #d97706;
+        }
+        body.dark .cart-fab {
+            box-shadow: 0 8px 20px rgba(0,0,0,0.3);
+        }
+        /* Drawer السلة الجانبي - تصميم حديث يشبه التطبيقات */
+        .cart-drawer {
+            position: fixed;
+            top: 0;
+            left: 0;
+            height: 100%;
+            width: 100%;
+            max-width: 420px;
+            background: #ffffff;
+            box-shadow: -5px 0 30px rgba(0, 0, 0, 0.15);
+            z-index: 1000;
+            transform: translateX(-100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.9, 0.4, 1.1);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        body.dark .cart-drawer {
+            background: #1f2937;
+        }
+        .cart-drawer.open {
+            transform: translateX(0);
+        }
+        .drawer-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            backdrop-filter: blur(4px);
+            z-index: 999;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.25s ease, visibility 0.25s;
+        }
+        .drawer-overlay.active {
+            opacity: 1;
+            visibility: visible;
+        }
+        /* تخصيص عناصر السلة */
+        .cart-item {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            background: rgba(249, 250, 251, 0.6);
+            border-radius: 20px;
+            transition: background 0.2s;
+        }
+        body.dark .cart-item {
+            background: #374151;
+        }
+        .cart-item-image {
+            width: 70px;
+            height: 70px;
+            border-radius: 18px;
+            object-fit: cover;
+            flex-shrink: 0;
+        }
+        .quantity-btn {
+            width: 32px;
+            height: 32px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            background: #e5e7eb;
+            cursor: pointer;
+            transition: 0.1s;
+            font-weight: bold;
+        }
+        body.dark .quantity-btn {
+            background: #4b5563;
+            color: white;
+        }
+        .quantity-btn:active {
+            transform: scale(0.92);
+        }
+        /* تحسين الأزرار للمس */
+        button, .quantity-btn, .cart-fab, .remove-btn {
+            cursor: pointer;
+            touch-action: manipulation;
+        }
+        /* Responsive تكيف */
+        @media (max-width: 640px) {
+            .cart-drawer {
+                max-width: 100%;
+                width: 90%;
+            }
+            .cart-item-image {
+                width: 60px;
+                height: 60px;
+            }
+            .cart-fab {
+                bottom: 20px;
+                right: 20px;
+                width: 56px;
+                height: 56px;
+                border-radius: 28px;
+            }
+        }
+        /* أنيميشن للعدد */
+        .badge-pulse {
+            animation: pulse 0.3s ease;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.3); background: #ef4444; }
+            100% { transform: scale(1); }
+        }
+        .whatsapp-float {
+            position: fixed;
+            bottom: 24px;
+            left: 24px;
+            background-color: #25D366;
+            color: white;
+            border-radius: 50px;
+            padding: 10px 18px;
+            box-shadow: 0 8px 20px rgba(37,211,102,0.3);
+            z-index: 45;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: bold;
+            transition: 0.2s;
+        }
+        .whatsapp-float:hover {
+            background-color: #20b859;
+            transform: scale(1.03);
+        }
+        .hero-gradient {
+            background: linear-gradient(135deg, #f8fafc 0%, #f1f5f9 100%);
+        }
+        body.dark .hero-gradient {
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+        }
+    </style>
+</head>
+<body class="bg-gray-50 text-gray-800 transition-all duration-300">
+
+    <!-- زر الواتساب الثابت -->
+    <a href="https://wa.me/9647838358521" target="_blank" class="whatsapp-float z-40">
+        <i class="fab fa-whatsapp text-xl"></i>
+        <span class="hidden sm:inline text-sm">تواصل سريع</span>
+    </a>
+
+    <!-- هيدر مع أيقونة سلة صغيرة (ثانوية) وأيقونة داكن -->
+    <header class="hero-gradient shadow-sm sticky top-0 z-30 backdrop-blur-sm bg-white/80 dark:bg-gray-900/80">
+        <div class="container mx-auto px-4 py-3 flex justify-between items-center">
+            <div class="flex items-center gap-3">
+                <i class="fas fa-utensils text-2xl text-amber-600"></i>
+                <h1 class="text-xl md:text-2xl font-bold tracking-tight">منيو <span class="text-amber-600">سفرة</span></h1>
+            </div>
+            <div class="flex gap-3 items-center">
+                <button id="darkModeToggle" class="text-xl p-2 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                    <i class="fas fa-moon"></i>
+                </button>
+                <!-- أيقونة سلة ثانوية في الهيدر للديسكتوب، لكن الرئيسي هو الـ FAB -->
+                <button id="cartIconHeader" class="relative bg-amber-100 dark:bg-amber-800 p-2 rounded-full md:hidden">
+                    <i class="fas fa-shopping-cart text-amber-600 dark:text-amber-300"></i>
+                    <span id="cartCountBadgeHeader" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">0</span>
+                </button>
+            </div>
+        </div>
+        <!-- صورة الغلاف -->
+        <div class="relative w-full h-48 md:h-64 bg-cover bg-center" style="background-image: url('https://images.pexels.com/photos/260922/pexels-photo-260922.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1'); background-blend-mode: overlay; background-color: rgba(0,0,0,0.4);">
+            <div class="absolute inset-0 flex flex-col justify-center items-center text-white text-center px-4 bg-black/30">
+                <h2 class="text-3xl md:text-5xl font-extrabold drop-shadow-lg animate__animated animate__fadeInUp">مطعم وكافيه سفرة</h2>
+                <p class="text-md md:text-lg mt-2 max-w-xl">أشهى الأطباق والمشروبات في أجواء راقية .. جرب تجربة رقمية فريدة</p>
+            </div>
+        </div>
+    </header>
+
+    <!-- أزرار التصنيف -->
+    <div class="container mx-auto px-4 py-5 flex flex-wrap justify-center gap-3 sticky top-[72px] z-20 bg-inherit backdrop-blur-sm">
+        <button data-cat="all" class="filter-btn active bg-amber-500 text-white px-5 py-2 rounded-full shadow transition">الكل</button>
+        <button data-cat="وجبات" class="filter-btn bg-gray-200 dark:bg-gray-700 px-5 py-2 rounded-full hover:bg-amber-400 transition">🍔 وجبات</button>
+        <button data-cat="مشروبات" class="filter-btn bg-gray-200 dark:bg-gray-700 px-5 py-2 rounded-full hover:bg-amber-400 transition">🥤 مشروبات</button>
+        <button data-cat="مقبلات" class="filter-btn bg-gray-200 dark:bg-gray-700 px-5 py-2 rounded-full hover:bg-amber-400 transition">🍟 مقبلات</button>
+        <button data-cat="حلويات" class="filter-btn bg-gray-200 dark:bg-gray-700 px-5 py-2 rounded-full hover:bg-amber-400 transition">🍰 حلويات</button>
+        <button id="adminPanelBtn" class="bg-indigo-500 text-white px-5 py-2 rounded-full shadow"><i class="fas fa-sliders-h"></i> إدارة</button>
+    </div>
+
+    <!-- عرض المنتجات -->
+    <main class="container mx-auto px-4 py-6 pb-24">
+        <div id="productsGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6"></div>
+    </main>
+
+    <!-- Floating Action Button للسلة (حديث احترافي) -->
+    <button id="cartFab" class="cart-fab w-14 h-14 rounded-full flex items-center justify-center text-white shadow-lg transition-all">
+        <i class="fas fa-shopping-bag text-xl"></i>
+        <span id="cartFabBadge" class="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full min-w-[22px] h-[22px] flex items-center justify-center px-1 border-2 border-white">0</span>
+    </button>
+
+    <!-- Overlay الخلفية للسلة الجانبية -->
+    <div id="drawerOverlay" class="drawer-overlay"></div>
+
+    <!-- Drawer السلة الجانبي (مودرن) -->
+    <div id="cartDrawer" class="cart-drawer">
+        <div class="p-4 border-b flex justify-between items-center bg-amber-50 dark:bg-gray-800 sticky top-0 z-10">
+            <h2 class="text-xl font-bold flex items-center gap-2"><i class="fas fa-bag-shopping text-amber-600"></i> سلة الطلبات</h2>
+            <button id="closeDrawerBtn" class="text-2xl w-8 h-8 rounded-full hover:bg-gray-200 dark:hover:bg-gray-700 transition">
+                <i class="fas fa-times"></i>
+            </button>
+        </div>
+        <div id="cartItemsDrawer" class="flex-1 overflow-y-auto p-4 space-y-3" style="max-height: calc(100% - 160px);">
+            <!-- سيتم عرض عناصر السلة هنا ديناميكياً -->
+            <div class="text-center text-gray-400 py-10">السلة فارغة، أضف أطباقك المفضلة ✨</div>
+        </div>
+        <div class="p-4 border-t bg-gray-50 dark:bg-gray-800 sticky bottom-0">
+            <div class="flex justify-between text-lg font-bold mb-3 px-1">
+                <span>المجموع الكلي:</span>
+                <span id="cartTotalDrawer">0 د.ع</span>
+            </div>
+            <button id="checkoutDrawerBtn" class="w-full bg-green-600 text-white py-3 rounded-full hover:bg-green-700 transition text-lg font-semibold shadow-md">
+                إتمام الطلب
+            </button>
+        </div>
+    </div>
+
+    <!-- مودال إدارة المنتجات -->
+    <div id="adminModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 hidden transition-all">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-lg mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center mb-4">
+                <h3 class="text-2xl font-bold">إدارة المنتجات</h3>
+                <button id="closeAdminModal" class="text-gray-500 text-2xl">&times;</button>
+            </div>
+            <div id="productsAdminList" class="mb-6 space-y-2"></div>
+            <hr class="my-4">
+            <h4 class="font-bold text-lg mb-3">إضافة منتج جديد</h4>
+            <div class="grid gap-3">
+                <input type="text" id="prodName" placeholder="اسم المنتج" class="p-2 border rounded dark:bg-gray-700 input-dark">
+                <input type="text" id="prodDesc" placeholder="وصف قصير" class="p-2 border rounded dark:bg-gray-700 input-dark">
+                <input type="number" id="prodPrice" placeholder="السعر (دينار)" class="p-2 border rounded dark:bg-gray-700 input-dark">
+                <input type="text" id="prodImage" placeholder="رابط الصورة" class="p-2 border rounded dark:bg-gray-700 input-dark">
+                <select id="prodCategory" class="p-2 border rounded dark:bg-gray-700 input-dark">
+                    <option value="وجبات">وجبات</option>
+                    <option value="مشروبات">مشروبات</option>
+                    <option value="مقبلات">مقبلات</option>
+                    <option value="حلويات">حلويات</option>
+                </select>
+                <button id="addProductBtn" class="bg-amber-500 text-white py-2 rounded-full mt-2">➕ إضافة المنتج</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- مودال معلومات العميل -->
+    <div id="customerModal" class="fixed inset-0 bg-black/60 flex items-center justify-center z-50 hidden overflow-y-auto">
+        <div class="bg-white dark:bg-gray-800 rounded-2xl w-full max-w-2xl mx-4 p-6 max-h-[90vh] overflow-y-auto">
+            <h3 class="text-2xl font-bold mb-4">معلومات التوصيل</h3>
+            <div class="grid gap-4">
+                <input type="text" id="fullName" placeholder="الاسم الكامل" class="p-3 border rounded dark:bg-gray-700 input-dark">
+                <input type="tel" id="phoneNumber" placeholder="رقم الهاتف" class="p-3 border rounded dark:bg-gray-700 input-dark">
+                <input type="text" id="city" placeholder="المحافظة / المنطقة" class="p-3 border rounded dark:bg-gray-700 input-dark">
+                <input type="text" id="landmark" placeholder="أقرب نقطة دالة" class="p-3 border rounded dark:bg-gray-700 input-dark">
+                <input type="text" id="address" placeholder="عنوان التوصيل التفصيلي" class="p-3 border rounded dark:bg-gray-700 input-dark">
+                <textarea id="notes" rows="2" placeholder="ملاحظات إضافية (اختياري)" class="p-3 border rounded dark:bg-gray-700 input-dark"></textarea>
+                <div class="flex gap-3 mt-2">
+                    <button id="submitOrderBtn" class="bg-amber-600 text-white py-3 rounded-full flex-1 hover:bg-amber-700">إرسال الطلب عبر واتساب</button>
+                    <button id="closeCustomerModal" class="bg-gray-400 text-white px-5 rounded-full">إلغاء</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <footer class="text-center py-6 bg-gray-100 dark:bg-gray-800 mt-8 text-sm">
+        <p>© 2025 منيو سفرة - جميع الحقوق محفوظة | تجربة رقمية سلسة</p>
+    </footer>
+
+    <script>
+        // بيانات المنتجات
+        let products = [
+            { id: 1, name: "برجر كلاسيك", desc: "برجر لحم طازج مع خضار وصوص سري", price: 8500, image: "https://images.pexels.com/photos/1639557/pexels-photo-1639557.jpeg?auto=compress&cs=tinysrgb&w=300", category: "وجبات" },
+            { id: 2, name: "بيتا شيش طاووق", desc: "صدور دجاج متبلة مع ثوم وصلصة", price: 7500, image: "https://images.pexels.com/photos/2619967/pexels-photo-2619967.jpeg?auto=compress&cs=tinysrgb&w=300", category: "وجبات" },
+            { id: 3, name: "موكتيل فواكه", desc: "عصير طبيعي منعش", price: 4000, image: "https://images.pexels.com/photos/3262781/pexels-photo-3262781.jpeg?auto=compress&cs=tinysrgb&w=300", category: "مشروبات" },
+            { id: 4, name: "لاتيه كراميل", desc: "قهوة مميزة مع كراميل", price: 5500, image: "https://images.pexels.com/photos/312418/pexels-photo-312418.jpeg?auto=compress&cs=tinysrgb&w=300", category: "مشروبات" },
+            { id: 5, name: "حمص باللحم", desc: "مقبلات شهية مع صنوبر و لحم", price: 6800, image: "https://images.pexels.com/photos/1279330/pexels-photo-1279330.jpeg?auto=compress&cs=tinysrgb&w=300", category: "مقبلات" },
+            { id: 6, name: "كنافة", desc: "كنافة نابلسية جبنة", price: 5000, image: "https://images.pexels.com/photos/4199098/pexels-photo-4199098.jpeg?auto=compress&cs=tinysrgb&w=300", category: "حلويات" }
+        ];
+        let cart = [];
+
+        // وظائف السلة
+        function saveCart() { updateCartUI(); }
+        function addToCart(productId) {
+            const product = products.find(p => p.id === productId);
+            if (!product) return;
+            const existing = cart.find(item => item.id === productId);
+            if (existing) existing.quantity++;
+            else cart.push({ ...product, quantity: 1 });
+            updateCartUI();
+            animateBadge();
+        }
+        function changeQty(id, delta) {
+            const idx = cart.findIndex(i => i.id === id);
+            if (idx !== -1) {
+                if (delta === -1 && cart[idx].quantity === 1) cart.splice(idx, 1);
+                else cart[idx].quantity += delta;
+                updateCartUI();
+            }
+        }
+        function removeItem(id) { cart = cart.filter(i => i.id !== id); updateCartUI(); }
+
+        function updateCartUI() {
+            const container = document.getElementById("cartItemsDrawer");
+            const totalSpan = document.getElementById("cartTotalDrawer");
+            const badgeFab = document.getElementById("cartFabBadge");
+            const badgeHeader = document.getElementById("cartCountBadgeHeader");
+            const totalItems = cart.reduce((sum, i) => sum + i.quantity, 0);
+            if (badgeFab) badgeFab.innerText = totalItems;
+            if (badgeHeader) badgeHeader.innerText = totalItems;
+            if (!container) return;
+            if (cart.length === 0) {
+                container.innerHTML = `<div class="text-center text-gray-400 py-10">🛒 السلة فارغة، أضف أطباقك المفضلة</div>`;
+                if (totalSpan) totalSpan.innerText = `0 د.ع`;
+                return;
+            }
+            let totalPrice = 0;
+            container.innerHTML = cart.map(item => {
+                totalPrice += item.price * item.quantity;
+                return `
+                    <div class="cart-item">
+                        <img src="${item.image}" class="cart-item-image" alt="${item.name}">
+                        <div class="flex-1">
+                            <div class="font-bold text-base">${item.name}</div>
+                            <div class="text-sm text-amber-600 dark:text-amber-400">${item.price} د.ع</div>
+                            <div class="flex items-center gap-2 mt-2">
+                                <div class="quantity-btn" onclick="changeQty(${item.id}, -1)">-</div>
+                                <span class="font-semibold min-w-[28px] text-center">${item.quantity}</span>
+                                <div class="quantity-btn" onclick="changeQty(${item.id}, 1)">+</div>
+                                <button onclick="removeItem(${item.id})" class="remove-btn text-red-500 mr-2 text-lg"><i class="fas fa-trash-alt"></i></button>
+                            </div>
+                        </div>
+                        <div class="font-bold text-amber-700 dark:text-amber-300">${item.price * item.quantity} د.ع</div>
+                    </div>
+                `;
+            }).join('');
+            if (totalSpan) totalSpan.innerText = `${totalPrice} د.ع`;
+        }
+        function animateBadge() {
+            const badge = document.getElementById("cartFabBadge");
+            if (badge) badge.classList.add("badge-pulse");
+            setTimeout(() => badge?.classList.remove("badge-pulse"), 300);
+        }
+
+        // التحكم في الدراور (السلة الجانبية)
+        const drawer = document.getElementById("cartDrawer");
+        const overlay = document.getElementById("drawerOverlay");
+        function openDrawer() {
+            drawer.classList.add("open");
+            overlay.classList.add("active");
+            document.body.style.overflow = "hidden";
+        }
+        function closeDrawer() {
+            drawer.classList.remove("open");
+            overlay.classList.remove("active");
+            document.body.style.overflow = "";
+        }
+        document.getElementById("cartFab").onclick = openDrawer;
+        document.getElementById("cartIconHeader")?.addEventListener("click", openDrawer);
+        document.getElementById("closeDrawerBtn").onclick = closeDrawer;
+        overlay.onclick = closeDrawer;
+
+        // فلتر المنتجات
+        let currentFilter = "all";
+        function renderProducts() {
+            const filtered = currentFilter === "all" ? products : products.filter(p => p.category === currentFilter);
+            const grid = document.getElementById("productsGrid");
+            if (!grid) return;
+            grid.innerHTML = filtered.map(product => `
+                <div class="card-bg rounded-2xl overflow-hidden shadow-md menu-item bg-white dark:bg-gray-800 transition hover:shadow-xl">
+                    <img src="${product.image}" class="h-48 w-full object-cover" alt="${product.name}">
+                    <div class="p-4">
+                        <div class="flex justify-between items-start">
+                            <h3 class="text-xl font-bold">${product.name}</h3>
+                            <span class="text-amber-600 font-bold">${product.price} د.ع</span>
+                        </div>
+                        <p class="text-gray-500 dark:text-gray-400 text-sm mt-1">${product.desc}</p>
+                        <div class="mt-4 flex justify-between items-center">
+                            <span class="text-xs bg-gray-100 dark:bg-gray-700 px-2 py-1 rounded-full">${product.category}</span>
+                            <button onclick="addToCart(${product.id})" class="bg-amber-500 text-white px-4 py-2 rounded-full hover:bg-amber-600 transition text-sm"><i class="fas fa-cart-plus"></i> أضف للسلة</button>
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        // أزرار الفلتر
+        document.querySelectorAll(".filter-btn").forEach(btn => {
+            btn.addEventListener("click", () => {
+                document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active", "bg-amber-500", "text-white"));
+                btn.classList.add("active", "bg-amber-500", "text-white");
+                currentFilter = btn.dataset.cat;
+                renderProducts();
+            });
+        });
+
+        // إدارة المنتجات (مودال)
+        const adminModal = document.getElementById("adminModal");
+        document.getElementById("adminPanelBtn").onclick = () => { renderAdminList(); adminModal.classList.remove("hidden"); };
+        document.getElementById("closeAdminModal").onclick = () => adminModal.classList.add("hidden");
+        function renderAdminList() {
+            const container = document.getElementById("productsAdminList");
+            container.innerHTML = products.map(prod => `
+                <div class="flex justify-between items-center bg-gray-100 dark:bg-gray-700 p-3 rounded-lg">
+                    <div><strong>${prod.name}</strong> (${prod.category}) - ${prod.price} د.ع</div>
+                    <div>
+                        <button onclick="editProduct(${prod.id})" class="text-blue-500 ml-2"><i class="fas fa-edit"></i></button>
+                        <button onclick="deleteProduct(${prod.id})" class="text-red-500"><i class="fas fa-trash"></i></button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        window.deleteProduct = (id) => { products = products.filter(p => p.id !== id); renderProducts(); renderAdminList(); };
+        window.editProduct = (id) => {
+            const prod = products.find(p => p.id === id);
+            if (prod) {
+                document.getElementById("prodName").value = prod.name;
+                document.getElementById("prodDesc").value = prod.desc;
+                document.getElementById("prodPrice").value = prod.price;
+                document.getElementById("prodImage").value = prod.image;
+                document.getElementById("prodCategory").value = prod.category;
+                deleteProduct(id);
+            }
+        };
+        document.getElementById("addProductBtn").onclick = () => {
+            const name = document.getElementById("prodName").value.trim();
+            const desc = document.getElementById("prodDesc").value.trim();
+            const price = parseFloat(document.getElementById("prodPrice").value);
+            const image = document.getElementById("prodImage").value.trim();
+            const category = document.getElementById("prodCategory").value;
+            if (!name || isNaN(price)) return alert("يرجى إدخال اسم وسعر صحيح");
+            const newId = Date.now();
+            products.push({ id: newId, name, desc, price, image: image || "https://images.pexels.com/photos/1640777/pexels-photo-1640777.jpeg?auto=compress&cs=tinysrgb&w=300", category });
+            renderProducts(); renderAdminList();
+            document.getElementById("prodName").value = "";
+            document.getElementById("prodDesc").value = "";
+            document.getElementById("prodPrice").value = "";
+            document.getElementById("prodImage").value = "";
+        };
+        // السلة واتمام الطلب
+        const customerModal = document.getElementById("customerModal");
+        document.getElementById("checkoutDrawerBtn").onclick = () => {
+            if (cart.length === 0) { alert("السلة فارغة!"); return; }
+            closeDrawer();
+            customerModal.classList.remove("hidden");
+        };
+        document.getElementById("closeCustomerModal").onclick = () => customerModal.classList.add("hidden");
+        document.getElementById("submitOrderBtn").onclick = () => {
+            const fullName = document.getElementById("fullName").value.trim();
+            const phone = document.getElementById("phoneNumber").value.trim();
+            const city = document.getElementById("city").value.trim();
+            const address = document.getElementById("address").value.trim();
+            if (!fullName || !phone || !city || !address) return alert("يرجى تعبئة الاسم، الهاتف، المحافظة، والعنوان");
+            let msg = "🛒 *طلب جديد من منيو سفرة* 🛒\n\n";
+            msg += `👤 الاسم: ${fullName}\n📞 الهاتف: ${phone}\n📍 المحافظة: ${city}\n📍 أقرب نقطة: ${document.getElementById("landmark").value.trim() || "غير محدد"}\n🏠 العنوان: ${address}\n📝 ملاحظات: ${document.getElementById("notes").value.trim() || "لا يوجد"}\n\n━━━━━━━━━━━━━━━\n*المنتجات:*\n`;
+            let total = 0;
+            cart.forEach(i => { total += i.price * i.quantity; msg += `• ${i.name} × ${i.quantity} = ${i.price * i.quantity} د.ع\n`; });
+            msg += `━━━━━━━━━━━━━━━\n💰 الإجمالي: ${total} د.ع\nشكراً لطلبك!`;
+            window.open(`https://wa.me/9647838358521?text=${encodeURIComponent(msg)}`, '_blank');
+            cart = []; updateCartUI(); customerModal.classList.add("hidden");
+            alert("تم إرسال الطلب بنجاح إلى واتساب");
+            document.getElementById("fullName").value = ""; document.getElementById("phoneNumber").value = ""; document.getElementById("city").value = ""; document.getElementById("landmark").value = ""; document.getElementById("address").value = ""; document.getElementById("notes").value = "";
+        };
+        // Dark Mode
+        const darkToggle = document.getElementById("darkModeToggle");
+        darkToggle.addEventListener("click", () => {
+            document.body.classList.toggle("dark");
+            localStorage.setItem("darkMode", document.body.classList.contains("dark"));
+            const icon = darkToggle.querySelector("i");
+            if (document.body.classList.contains("dark")) icon.classList.replace("fa-moon", "fa-sun");
+            else icon.classList.replace("fa-sun", "fa-moon");
+        });
+        if (localStorage.getItem("darkMode") === "true") document.body.classList.add("dark");
+        renderProducts();
+        updateCartUI();
+    </script>
+</body>
+</html>
